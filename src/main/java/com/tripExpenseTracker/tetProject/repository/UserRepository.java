@@ -1,0 +1,14 @@
+package com.tripExpenseTracker.tetProject.repository;
+
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.tripExpenseTracker.tetProject.entity.User;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    boolean existsByEmail(String email);
+
+    Optional<User> findByEmail(String email);
+}
