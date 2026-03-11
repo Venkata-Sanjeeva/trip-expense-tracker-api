@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
         
         GlobalResponse<Void> response = GlobalResponse.<Void>builder()
                 .status(HttpStatus.UNAUTHORIZED.value()) // 401 Unauthorized
-                .message("Login Failed")
+                .message("Login Failed! Invalid Login Credentials...")
                 .data(null) 
                 .build();
 
