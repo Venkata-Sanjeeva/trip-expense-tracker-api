@@ -9,8 +9,10 @@ public interface TripService {
 	
 	TripResponse saveTrip(TripRequest tripRequest, String userEmail);
 	
-	TripResponse fetchTrip(String TripUID);
-	
+	TripResponse fetchTrip(String tripUID);
+
+	TripResponse updateTripStatus(String tripUID, String status, String userEmail);
+
 	List<TripResponse> fetchMyTrips(String userEmail); 
 	
 	void deleteTrip(String tripUID);

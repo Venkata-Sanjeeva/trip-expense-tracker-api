@@ -16,6 +16,7 @@ public class TripResponse {
     private String tripUID;
     private String tripName;
     private String tripType;
+    private String tripStatus;
     private LocalDateTime createdAt;
     private List<String> participants; // Just the names for the UI chips
 }

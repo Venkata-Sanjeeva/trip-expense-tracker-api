@@ -37,6 +37,9 @@ public class Trip {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(nullable = false)
+    private String tripStatus = "CREATED";
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
