@@ -44,16 +44,20 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // 1. Public Endpoints
                         .requestMatchers(
-                        		"/api/auth/**", 
-                        		"/api/public/**",
-                        		
-                        		// Swagger-ui documentation
-                        		"/v3/api-docs/**",
-                        	    "/swagger-ui/**").permitAll()
+                                "/api/auth/**", 
+                                "/api/public/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**"
+                        ).permitAll()
+                        
+                        // 2. Secured Endpoints (Fixed Syntax)
+                        .requestMatchers("/api/trips/**", "/api/expenses/**").hasRole("USER") 
+                        
+                        // 3. Final Catch-all
                         .anyRequest().authenticated()
                 )
-                // AuthenticationProvider must be linked here
                 .authenticationProvider(authenticationProvider()) 
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

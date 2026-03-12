@@ -17,7 +17,8 @@ import io.jsonwebtoken.security.Keys;
 public class JwtUtils {
 
 
-    private static final long EXPIRATION_TIME = 1000 * 60 * 24 * 7; //for 2 days
+	// ms * sec * min * hours * days
+	private static final long EXPIRATION_TIME = 1000L * 60 * 60 * 24 * 7;
 
     @Value("${JWT_SECRET_VALUE}")
     private String secretKey;
