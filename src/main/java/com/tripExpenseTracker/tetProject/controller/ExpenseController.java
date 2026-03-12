@@ -46,4 +46,16 @@ public class ExpenseController {
 				.build());
 	}
 	
+	@PutMapping("/update/{tripUID}/{expenseUID}")
+	public ResponseEntity<GlobalResponse<ExpenseResponse>> updateExpenseOfTrip(
+			@RequestBody ExpenseRequest expenseRequest,
+			@PathVariable String tripUID,
+			@PathVariable String expenseUID, 
+			Principal principal) {
+		return ResponseEntity.status(HttpStatus.OK).body(GlobalResponse.<ExpenseResponse>builder()
+				.status(HttpStatus.OK.value())
+				.data(expenseService.updateExpense(tripUID, expenseRequest, expenseUID))
+				.message("Expense Saved Successfully...")
+				.build());
+	}
 }

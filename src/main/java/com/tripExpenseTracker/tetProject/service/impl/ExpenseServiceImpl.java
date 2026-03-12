@@ -26,6 +26,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 	
 	private final TripServiceImpl tripService;
 	private final ParticipantServiceImpl participantsService;
+	
 
 	private ExpenseResponse mapToResponse(Expense expense) {
 
@@ -63,7 +64,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
 	    // 3. Find who paid
 	    Participant payer = trip.getParticipants().stream()
-	        .filter(p -> p.getName().equals(expenseRequest.getPaidByParticipantName()))
+	        .filter(p -> p.getName().toLowerCase().equals(expenseRequest.getPaidByParticipantName().toLowerCase()))
 	        .findFirst().orElseThrow();
 	    expense.setPaidBy(payer);
 
@@ -92,6 +93,54 @@ public class ExpenseServiceImpl implements ExpenseService {
 	    return mapToResponse(expense);
 	}
 	
+	@Override
+	public Expense fetchExpenseByUID(String expenseUID) {
+		return expenseRepo.findByExpenseUID(expenseUID).orElseThrow(() -> new RuntimeException("Expense with UID: " + expenseUID + " not found!"));
+	}
+	
+	@Override
+	@Transactional
+	public ExpenseResponse updateExpense(String tripUID, ExpenseRequest expenseRequest, String expenseUID) {
+	    // 1. Fetch Trip and Expense
+	    Trip trip = tripService.fetchTripByUID(tripUID);
+	    Expense expense = expenseRepo.findByExpenseUID(expenseUID)
+	        .orElseThrow(() -> new RuntimeException("Expense not found!"));
+	    
+	    // 2. Update basic fields
+	    expense.setDescription(expenseRequest.getDescription());
+	    expense.setAmount(expenseRequest.getTotalAmount());
+
+	    // 3. Find who paid
+	    Participant payer = trip.getParticipants().stream()
+	        .filter(p -> p.getName().equalsIgnoreCase(expenseRequest.getPaidByParticipantName()))
+	        .findFirst()
+	        .orElseThrow(() -> new RuntimeException("Payer not found in this trip!"));
+	    expense.setPaidBy(payer);
+
+	    // 4. Update Splits: Clear the old and add the new
+	    // orphanRemoval = true in the Entity will handle the DB deletion
+	    expense.getSplits().clear(); 
+
+	    double share = expenseRequest.getTotalAmount() / expenseRequest.getInvolvedParticipantNames().size();
+	    
+	    for (String name : expenseRequest.getInvolvedParticipantNames()) {
+	        Participant p = trip.getParticipants().stream()
+	            .filter(part -> part.getName().equalsIgnoreCase(name))
+	            .findFirst()
+	            .orElseThrow(() -> new RuntimeException("Participant " + name + " not found!"));
+
+	        ExpenseSplit split = new ExpenseSplit();
+	        split.setExpense(expense);
+	        split.setParticipant(p);
+	        split.setShareAmount(share);
+	        
+	        expense.getSplits().add(split);
+	    }
+
+	    // 5. Save and Return
+	    Expense savedExpense = expenseRepo.save(expense);
+	    return mapToResponse(savedExpense);
+	}
 	
 	@Override
 	public List<ExpenseResponse> fetchExpensesOfTripUID(String tripUID) {
@@ -102,4 +151,5 @@ public class ExpenseServiceImpl implements ExpenseService {
 		return listOfExpenses.stream().map(expense -> mapToResponse(expense)).toList();
 		
 	}
+
 }
