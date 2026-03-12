@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +34,15 @@ public class TripController {
 				.status(HttpStatus.CREATED.value())
 				.data(tripService.saveTrip(tripRequest, principal.getName()))
 				.message("Trip Created Successfully.")
+				.build());
+	}
+	
+	@GetMapping("/{tripUID}")
+	public ResponseEntity<GlobalResponse<TripResponse>> getSpecificUserTrip(@PathVariable String tripUID, Principal principal) {
+		return ResponseEntity.status(HttpStatus.OK).body(GlobalResponse.<TripResponse>builder()
+				.status(HttpStatus.OK.value())
+				.data(tripService.fetchTrip(tripUID, principal.getName()))
+				.message("Trip with ID: " + tripUID + " fetched successfully...")
 				.build());
 	}
 	

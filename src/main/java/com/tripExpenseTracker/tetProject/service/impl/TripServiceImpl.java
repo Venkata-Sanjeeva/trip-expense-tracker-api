@@ -102,15 +102,24 @@ public class TripServiceImpl implements TripService {
 	    
 	    return response;
 	}
+	
+	@Override
+	public Trip fetchTripByUID(String tripUID) {
+		return tripRepo.findByTripUID(tripUID).orElseThrow();
+	}
 
 	@Override
-	public TripResponse fetchTrip(String tripUID) {
-		Trip trip = tripRepo.findByTripUID(tripUID).orElseThrow();
+	public TripResponse fetchTrip(String tripUID, String userEmail) {
+		User user = userService.getUserByEmail(userEmail);
+		
+		Trip trip = tripRepo.findByTripUIDAndUserId(tripUID, user.getId()).orElseThrow();
 		
 		List<String> names = separateParticipantsNames(trip.getParticipants());
 		
 		return convertToResponse(tripUID, trip, names);
 	}
+	
+	
 
 	@Override
 	public TripResponse updateTripStatus(String tripUID, String status, String userEmail) {
