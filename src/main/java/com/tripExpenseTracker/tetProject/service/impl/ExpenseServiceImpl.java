@@ -93,4 +93,13 @@ public class ExpenseServiceImpl implements ExpenseService {
 	}
 	
 	
+	@Override
+	public List<ExpenseResponse> fetchExpensesOfTripUID(String tripUID) {
+		Trip tripObj = tripService.fetchTripByUID(tripUID);
+		
+		List<Expense> listOfExpenses = expenseRepo.findByTripId(tripObj.getId());
+		
+		return listOfExpenses.stream().map(expense -> mapToResponse(expense)).toList();
+		
+	}
 }
