@@ -105,7 +105,7 @@ public class TripServiceImpl implements TripService {
 	
 	@Override
 	public Trip fetchTripByUID(String tripUID) {
-		return tripRepo.findByTripUID(tripUID).orElseThrow();
+		return tripRepo.findByTripUID(tripUID).orElseThrow(() -> new RuntimeException("Trip not found"));
 	}
 
 	@Override

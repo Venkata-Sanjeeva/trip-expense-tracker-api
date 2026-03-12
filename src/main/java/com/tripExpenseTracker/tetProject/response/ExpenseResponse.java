@@ -1,17 +1,32 @@
 package com.tripExpenseTracker.tetProject.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class ExpenseResponse {
-    private Long id;
+	private String expenseUID;
     private String description;
-    private Double amount;
+    private Double totalAmount;
     private String paidBy;
-    private LocalDateTime date;
-    private Double sharePerPerson; // Calculated on the fly: amount / splitAmong.size()
+    private LocalDateTime expenseDate;
+    
+    @Data
+    @AllArgsConstructor
+    public static class SplitDetail {
+        private String participantName;
+        private Double shareAmount;
+    }
+    
+    // List of objects showing each person's share
+    private List<SplitDetail> splits;
+
 }

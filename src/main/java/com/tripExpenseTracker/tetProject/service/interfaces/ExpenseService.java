@@ -1,5 +1,8 @@
 package com.tripExpenseTracker.tetProject.service.interfaces;
 
-public interface ExpenseService {
+import com.tripExpenseTracker.tetProject.request.ExpenseRequest;
+import com.tripExpenseTracker.tetProject.response.ExpenseResponse;
 
+public interface ExpenseService {
+	ExpenseResponse createExpense(ExpenseRequest expenseRequest);
 }

@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 public class ExpenseRequest {
     @NotNull
-    private Long tripId;
+    private String tripUID;
 
     @NotBlank
     private String description;
@@ -22,5 +22,5 @@ public class ExpenseRequest {
     private String paidByParticipantName; // The name from our participants list
 
     // We send the list of names who are involved in this specific bill
-    private List<String> splitAmong;
+    private List<String> involvedParticipantNames;
 }
