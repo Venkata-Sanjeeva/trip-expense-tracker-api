@@ -1,5 +1,6 @@
 package com.tripExpenseTracker.tetProject.service.impl;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -24,5 +25,14 @@ public class ParticipantServiceImpl implements ParticipantService {
 		
 		return participantRepo.findByParticipantUIDAndTripId(participantUID, tripObj.getId());
 	}
+
+	@Override
+	public List<Participant> getParticipantsByTripUID(String tripUID) {
+		Trip tripObj = tripService.fetchTripByUID(tripUID);
+		
+		return participantRepo.findByTripId(tripObj.getId());
+	}
+	
+	
 
 }
