@@ -6,13 +6,7 @@ import java.util.List;
 import org.springdoc.core.service.GenericResponseService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.tripExpenseTracker.tetProject.request.ExpenseRequest;
 import com.tripExpenseTracker.tetProject.response.ExpenseResponse;
@@ -64,5 +58,11 @@ public class ExpenseController {
 	public ResponseEntity<?> result(@PathVariable String tripUID)
 	{
 		return ResponseEntity.ok(expenseService.totalExpensesOfEachParticipant(tripUID));
+	}
+
+	@GetMapping("/share/{tripUID}")
+	public ResponseEntity<Double> calcShareIndividually(@PathVariable String tripUID, @RequestParam String participantUID)
+	{
+		return ResponseEntity.ok(expenseService.calcShareAmountPerPerson(participantUID,tripUID));
 	}
 }

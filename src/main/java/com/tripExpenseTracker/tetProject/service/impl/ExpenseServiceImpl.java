@@ -50,6 +50,22 @@ public class ExpenseServiceImpl implements ExpenseService {
 	    		.expenseDate(expense.getExpenseDate())
 	    		.build();
 	}
+	public Map<String,Double> calcTotalAmountOfPersons(List<ExpenseResponse>expenseList)
+	{
+		Map<String,Double> map=new HashMap<>();
+
+		for(ExpenseResponse expense:expenseList )
+		{
+			List<ExpenseResponse.SplitDetail> splitDetails=expense.getSplits();
+			for(ExpenseResponse.SplitDetail split:splitDetails)
+			{
+				Double shareAmout=split.getShareAmount();
+				map.put(split.getParticipantName(), map.getOrDefault(split.getParticipantName(),0.0)+shareAmout);
+
+			}
+		}
+		return map;
+	}
 	
 	@Override
 	@Transactional
@@ -157,20 +173,16 @@ public class ExpenseServiceImpl implements ExpenseService {
 	public TripSplitAmountResponse totalExpensesOfEachParticipant(String tripUID)
 	{
 		List<ExpenseResponse> expenseList=fetchExpensesOfTripUID(tripUID);
-		Map<String,Double> map=new HashMap<>();
-
-		for(ExpenseResponse expense:expenseList )
-		{
-			List<ExpenseResponse.SplitDetail> splitDetails=expense.getSplits();
-			for(ExpenseResponse.SplitDetail split:splitDetails)
-			{
-				Double shareAmout=split.getShareAmount();
-				map.put(split.getParticipantName(), map.getOrDefault(split.getParticipantName(),0.0)+shareAmout);
-
-			}
-		}
+		Map<String,Double> map=calcTotalAmountOfPersons(expenseList);
 		System.out.println(map);
 		return null;
+	}
+
+	public Double calcShareAmountPerPerson(String participantUID, String tripUID)
+	{
+		Participant participant=participantsService.getParticipantByUIDAndTripUID(participantUID,tripUID).orElseThrow();
+		Map<String,Double> map=calcTotalAmountOfPersons(fetchExpensesOfTripUID(tripUID));
+		return map.getOrDefault(participant.getName(),0.0);
 	}
 
 }
