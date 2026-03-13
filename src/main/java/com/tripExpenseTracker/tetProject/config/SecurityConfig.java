@@ -82,9 +82,8 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         // Pass the service directly into the constructor as the error requires
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(customUserDetailsService);
         
-        authProvider.setUserDetailsService(customUserDetailsService);
         // Set the password encoder separately
         authProvider.setPasswordEncoder(passwordEncoder());
         

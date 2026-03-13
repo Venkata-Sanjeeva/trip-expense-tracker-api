@@ -150,6 +150,9 @@ public class TripServiceImpl implements TripService {
 		System.out.println("Trip ID: " + tripUID + " deleted successfully...");
 	}
 
-	
+	public List<String> fetchParticipantsOfTripByUID(String tripUID) {
+		Trip tripObj = fetchTripByUID(tripUID);
+		return separateParticipantsNames(tripObj.getParticipants());
+	}
 	
 }
