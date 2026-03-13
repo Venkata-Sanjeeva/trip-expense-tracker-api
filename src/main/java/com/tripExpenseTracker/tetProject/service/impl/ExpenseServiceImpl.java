@@ -1,9 +1,12 @@
 package com.tripExpenseTracker.tetProject.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.tripExpenseTracker.tetProject.response.TripSplitAmountResponse;
 import org.springframework.stereotype.Service;
 
 import com.tripExpenseTracker.tetProject.entity.Expense;
@@ -150,6 +153,24 @@ public class ExpenseServiceImpl implements ExpenseService {
 		
 		return listOfExpenses.stream().map(expense -> mapToResponse(expense)).toList();
 		
+	}
+	public TripSplitAmountResponse totalExpensesOfEachParticipant(String tripUID)
+	{
+		List<ExpenseResponse> expenseList=fetchExpensesOfTripUID(tripUID);
+		Map<String,Double> map=new HashMap<>();
+
+		for(ExpenseResponse expense:expenseList )
+		{
+			List<ExpenseResponse.SplitDetail> splitDetails=expense.getSplits();
+			for(ExpenseResponse.SplitDetail split:splitDetails)
+			{
+				Double shareAmout=split.getShareAmount();
+				map.put(split.getParticipantName(), map.getOrDefault(split.getParticipantName(),0.0)+shareAmout);
+
+			}
+		}
+		System.out.println(map);
+		return null;
 	}
 
 }

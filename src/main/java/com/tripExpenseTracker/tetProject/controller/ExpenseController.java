@@ -3,6 +3,7 @@ package com.tripExpenseTracker.tetProject.controller;
 import java.security.Principal;
 import java.util.List;
 
+import org.springdoc.core.service.GenericResponseService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,7 +27,8 @@ import lombok.RequiredArgsConstructor;
 public class ExpenseController {
 	
 	private final ExpenseServiceImpl expenseService;
-	
+	private final GenericResponseService responseBuilder;
+
 	@PostMapping("/create")
 	public ResponseEntity<GlobalResponse<ExpenseResponse>> saveExpenseOfTrip(
 			@RequestBody ExpenseRequest expenseRequest, Principal principal) {
@@ -57,5 +59,10 @@ public class ExpenseController {
 				.data(expenseService.updateExpense(tripUID, expenseRequest, expenseUID))
 				.message("Expense Saved Successfully...")
 				.build());
+	}
+	@GetMapping("/final/{tripUID}")
+	public ResponseEntity<?> result(@PathVariable String tripUID)
+	{
+		return ResponseEntity.ok(expenseService.totalExpensesOfEachParticipant(tripUID));
 	}
 }
