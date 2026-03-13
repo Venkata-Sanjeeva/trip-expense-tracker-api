@@ -52,9 +52,9 @@ public class ExpenseServiceImpl implements ExpenseService {
 	}
 
 	public Map<String,Double> calcTotalAmountOfPersons(List<ExpenseResponse> expenseList) {
-		Map<String,Double> map=new HashMap<>();
+		Map<String,Double> map = new HashMap<>();
 
-		for(ExpenseResponse expense:expenseList ) {
+		for(ExpenseResponse expense : expenseList) {
 			List<ExpenseResponse.SplitDetail> splitDetails = expense.getSplits();
 
 			for(ExpenseResponse.SplitDetail split : splitDetails) {
@@ -62,6 +62,17 @@ public class ExpenseServiceImpl implements ExpenseService {
 				String participantName = split.getParticipantName();
 				map.put(participantName, map.getOrDefault(participantName,0.0) + shareAmount);
 			}
+		}
+		return map;
+	}
+
+	public Map<String,Double> calcTotalAmountOfPersonsWhoPaid(List<ExpenseResponse> expenseList) {
+		Map<String,Double> map = new HashMap<>();
+
+		for(ExpenseResponse expense : expenseList) {
+			String participantWhoPaid = expense.getPaidBy();
+
+			map.put(participantWhoPaid, map.getOrDefault(participantWhoPaid,0.0) + expense.getTotalAmount());
 		}
 		return map;
 	}
