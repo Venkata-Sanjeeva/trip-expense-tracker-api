@@ -45,15 +45,17 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // 1. Public Endpoints
-                        .requestMatchers(
-                                "/api/auth/**", 
-                                "/api/public/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**"
-                        ).permitAll()
+                		.requestMatchers(
+                			    "/api/auth/**",
+                			    "/api/public/**",
+                			    "/v3/api-docs/**",     // OpenAPI JSON/YAML docs
+                			    "/v3/api-docs.yaml",   // Sometimes needed specifically
+                			    "/swagger-ui/**",      // Swagger UI HTML and static assets
+                			    "/swagger-ui.html"    // Legacy redirect path
+                			).permitAll()
                         
                         // 2. Secured Endpoints (Fixed Syntax)
-                        // .requestMatchers("/api/trips/**", "/api/expenses/**").hasRole("USER") 
+                         .requestMatchers("/api/trip/**", "/api/expenses/**").hasAuthority("USER") 
                         
                         // 3. Final Catch-all
                         .anyRequest().authenticated()
@@ -80,8 +82,9 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         // Pass the service directly into the constructor as the error requires
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(customUserDetailsService);
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         
+        authProvider.setUserDetailsService(customUserDetailsService);
         // Set the password encoder separately
         authProvider.setPasswordEncoder(passwordEncoder());
         
