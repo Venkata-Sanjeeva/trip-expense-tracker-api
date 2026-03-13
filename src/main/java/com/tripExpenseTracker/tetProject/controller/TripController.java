@@ -8,8 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tripExpenseTracker.tetProject.request.TripRequest;
@@ -45,6 +47,19 @@ public class TripController {
 				.message("Trip with ID: " + tripUID + " fetched successfully...")
 				.build());
 	}
+	
+	@PutMapping("/{tripUID}/update/status")
+	public ResponseEntity<GlobalResponse<TripResponse>> updateTripStatus(
+			@PathVariable String tripUID, 
+			@RequestParam String newStatus,
+			Principal principal) {
+		return ResponseEntity.status(HttpStatus.OK).body(GlobalResponse.<TripResponse>builder()
+				.status(HttpStatus.OK.value())
+				.data(tripService.updateTripStatus(tripUID, newStatus, principal.getName()))
+				.message("Trip with UID: " + tripUID + " updated status...")
+				.build());
+	}
+	
 	
 	@GetMapping("/my-trips")
 	public ResponseEntity<GlobalResponse<List<TripResponse>>> getUserTrips(Principal principal) {
