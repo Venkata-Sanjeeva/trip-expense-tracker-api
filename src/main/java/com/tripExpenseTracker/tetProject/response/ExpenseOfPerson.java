@@ -8,12 +8,14 @@ import lombok.Data;
 @AllArgsConstructor
 @Data
 public class ExpenseOfPerson {
-	private String participantName;
+	private ParticipantDTO participant;
+	private Double shareAmount;
 	
 	@AllArgsConstructor
 	@Data
 	public static class ExpenseSplitPerPerson {
 		private String expenseUID;
+		private String expenseDesc;
 		private Double amountToBePaid;
 		private Double totalExpenseAmount;
 	}
