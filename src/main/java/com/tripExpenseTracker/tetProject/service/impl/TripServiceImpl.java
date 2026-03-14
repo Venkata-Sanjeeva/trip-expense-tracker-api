@@ -3,6 +3,7 @@ package com.tripExpenseTracker.tetProject.service.impl;
 import java.util.List;
 
 import com.tripExpenseTracker.tetProject.enums.TripStatus;
+import com.tripExpenseTracker.tetProject.response.ParticipantDTO;
 import org.springframework.stereotype.Service;
 
 import com.tripExpenseTracker.tetProject.entity.Participant;
@@ -24,7 +25,7 @@ public class TripServiceImpl implements TripService {
 	private final TripRepository tripRepo;
 	private final UserServiceImpl userService;
 
-	public TripResponse convertToResponse(String tripUID, Trip trip, List<String> participants) {
+	public TripResponse convertToResponse(String tripUID, Trip trip, List<ParticipantDTO> participants) {
 		return TripResponse.builder()
 				.tripUID(tripUID)
 				.tripName(trip.getName())
@@ -35,9 +36,9 @@ public class TripServiceImpl implements TripService {
 				.build();
 	}
 
-	public List<String> separateParticipantsNames(List<Participant> participants) {
+	public List<ParticipantDTO> separateParticipantsNames(List<Participant> participants) {
 		return participants.stream()
-				.map(Participant::getName)
+				.map(participantObj -> new ParticipantDTO(participantObj.getParticipantUID(), participantObj.getName()))
 				.toList();
 	}
 	
@@ -70,12 +71,10 @@ public class TripServiceImpl implements TripService {
 	    response.setTripName(trip.getName());
 	    response.setTripType(trip.getTripType());
 	    response.setCreatedAt(trip.getCreatedAt());
-        
-        // Map Participant entities back to a simple String list for React
-        List<String> names = participantEntities.stream()
-                .map(Participant::getName)
-                .toList();
-        response.setParticipants(names);
+
+        List<ParticipantDTO> participantDTOList = separateParticipantsNames(participantEntities);
+
+        response.setParticipants(participantDTOList);
         
         return response;
 	}
@@ -91,7 +90,7 @@ public class TripServiceImpl implements TripService {
 	    // 3. Convert Entities to Response DTOs
 	    List<TripResponse> response = trips.stream().map(trip -> {
 	        // Map Participant entities back to a simple String list for React
-	        List<String> names = separateParticipantsNames(trip.getParticipants());
+	        List<ParticipantDTO> names = separateParticipantsNames(trip.getParticipants());
 
 			TripResponse responseDto = convertToResponse(trip.getTripUID(), trip, names);
 
@@ -114,7 +113,7 @@ public class TripServiceImpl implements TripService {
 		
 		Trip trip = tripRepo.findByTripUIDAndUserId(tripUID, user.getId()).orElseThrow();
 		
-		List<String> names = separateParticipantsNames(trip.getParticipants());
+		List<ParticipantDTO> names = separateParticipantsNames(trip.getParticipants());
 		
 		return convertToResponse(tripUID, trip, names);
 	}
@@ -136,7 +135,7 @@ public class TripServiceImpl implements TripService {
 		tripObj.setTripStatus(tripStatus.toString());
 
 		Trip savedTrip = tripRepo.save(tripObj);
-		List<String> names = separateParticipantsNames(savedTrip.getParticipants());
+		List<ParticipantDTO> names = separateParticipantsNames(savedTrip.getParticipants());
 
 		return convertToResponse(tripUID, savedTrip, names);
 	}

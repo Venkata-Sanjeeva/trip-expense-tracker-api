@@ -16,13 +16,13 @@ public class ExpenseResponse {
 	private String expenseUID;
     private String description;
     private Double totalAmount;
-    private String paidBy;
+    private ParticipantDTO paidBy;
     private LocalDateTime expenseDate;
     
     @Data
     @AllArgsConstructor
     public static class SplitDetail {
-        private String participantName;
+        private ParticipantDTO participant;
         private Double shareAmount;
     }
     

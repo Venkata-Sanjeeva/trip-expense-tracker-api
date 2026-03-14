@@ -2,6 +2,7 @@ package com.tripExpenseTracker.tetProject.request;
 
 import java.util.List;
 
+import com.tripExpenseTracker.tetProject.response.ParticipantDTO;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -19,8 +20,8 @@ public class ExpenseRequest {
     private Double totalAmount;
 
     @NotBlank
-    private String paidByParticipantName; // The name from our participants list
+    private String paidByParticipantUID; // The name from our participants list
 
     // We send the list of names who are involved in this specific bill
-    private List<String> involvedParticipantNames;
+    private List<ParticipantDTO> involvedParticipants;
 }

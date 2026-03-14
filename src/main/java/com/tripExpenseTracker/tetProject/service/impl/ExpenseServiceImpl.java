@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.tripExpenseTracker.tetProject.response.ParticipantDTO;
 import com.tripExpenseTracker.tetProject.response.TripSplitAmountResponse;
 import org.springframework.stereotype.Service;
 
@@ -35,17 +36,21 @@ public class ExpenseServiceImpl implements ExpenseService {
 
 	    // Map the internal ExpenseSplit entities to the SplitDetail DTOs
 	    List<ExpenseResponse.SplitDetail> listOfSplitDetail = expense.getSplits().stream()
-	        .map(split -> new ExpenseResponse.SplitDetail(
-	            split.getParticipant().getName(),
-	            split.getShareAmount()
-	        ))
+	        .map(split -> {
+				Participant participant = split.getParticipant();
+				return new ExpenseResponse.SplitDetail(
+						new ParticipantDTO(participant.getParticipantUID(), participant.getName()),
+						split.getShareAmount());
+			})
 	        .collect(Collectors.toList());
+
+		Participant paidByObj = expense.getPaidBy();
 	        
 	    return ExpenseResponse.builder()
 	    		.expenseUID(expense.getExpenseUID())
 	    		.description(expense.getDescription())
 	    		.totalAmount(expense.getAmount())
-	    		.paidBy(expense.getPaidBy().getName())
+	    		.paidBy(new ParticipantDTO(paidByObj.getParticipantUID(), paidByObj.getName()))
 	    		.splits(listOfSplitDetail)
 	    		.expenseDate(expense.getExpenseDate())
 	    		.build();
@@ -59,8 +64,10 @@ public class ExpenseServiceImpl implements ExpenseService {
 
 			for(ExpenseResponse.SplitDetail split : splitDetails) {
 				Double shareAmount = split.getShareAmount();
-				String participantName = split.getParticipantName();
-				map.put(participantName, map.getOrDefault(participantName,0.0) + shareAmount);
+				ParticipantDTO participantDTO = split.getParticipant();
+
+				String participantUID = participantDTO.getParticipantUID();
+				map.put(participantUID, map.getOrDefault(participantUID,0.0) + shareAmount);
 			}
 		}
 		return map;
@@ -70,9 +77,9 @@ public class ExpenseServiceImpl implements ExpenseService {
 		Map<String,Double> map = new HashMap<>();
 
 		for(ExpenseResponse expense : expenseList) {
-			String participantWhoPaid = expense.getPaidBy();
+			ParticipantDTO participantWhoPaid = expense.getPaidBy();
 
-			map.put(participantWhoPaid, map.getOrDefault(participantWhoPaid,0.0) + expense.getTotalAmount());
+			map.put(participantWhoPaid.getParticipantUID(), map.getOrDefault(participantWhoPaid.getParticipantUID(),0.0) + expense.getTotalAmount());
 		}
 		return map;
 	}
@@ -91,21 +98,21 @@ public class ExpenseServiceImpl implements ExpenseService {
 	    expense.setExpenseDate(LocalDateTime.now());
 	    expense.setTrip(trip);
 
+		String paidPartiUID = expenseRequest.getPaidByParticipantUID();
+
 	    // 3. Find who paid
-	    Participant payer = trip.getParticipants().stream()
-	        .filter(p -> p.getName().toLowerCase().equals(expenseRequest.getPaidByParticipantName().toLowerCase()))
-	        .findFirst().orElseThrow();
+	    Participant payer = participantsService.getParticipantByUIDAndTripUID(paidPartiUID, trip.getTripUID()).orElseThrow(() -> new RuntimeException("Participant with UID: " + paidPartiUID + " not found!"));
 	    expense.setPaidBy(payer);
 
 	    // 4. Calculate and Create Splits (Equally for now)
-	    double share = expenseRequest.getTotalAmount() / expenseRequest.getInvolvedParticipantNames().size();
+	    double share = expenseRequest.getTotalAmount() / expenseRequest.getInvolvedParticipants().size();
 	    
 	    List<Participant> listOfParticipants = participantsService.getParticipantsByTripUID(trip.getTripUID());
 	    
-	    List<ExpenseSplit> splits = expenseRequest.getInvolvedParticipantNames().stream().map(name -> {
+	    List<ExpenseSplit> splits = expenseRequest.getInvolvedParticipants().stream().map(dto -> {
 	    	
 	        Participant p = listOfParticipants.stream()
-	            .filter(part -> part.getName().toLowerCase().equals(name.toLowerCase()))
+	            .filter(part -> part.getParticipantUID().equalsIgnoreCase(dto.getParticipantUID()))
 	            .findFirst().orElseThrow(() -> new RuntimeException("Participant Not Found!"));
 	            
 	        ExpenseSplit split = new ExpenseSplit();
@@ -141,7 +148,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
 	    // 3. Find who paid
 	    Participant payer = trip.getParticipants().stream()
-	        .filter(p -> p.getName().equalsIgnoreCase(expenseRequest.getPaidByParticipantName()))
+	        .filter(p -> p.getParticipantUID().equalsIgnoreCase(expenseRequest.getPaidByParticipantUID()))
 	        .findFirst()
 	        .orElseThrow(() -> new RuntimeException("Payer not found in this trip!"));
 	    expense.setPaidBy(payer);
@@ -150,13 +157,13 @@ public class ExpenseServiceImpl implements ExpenseService {
 	    // orphanRemoval = true in the Entity will handle the DB deletion
 	    expense.getSplits().clear(); 
 
-	    double share = expenseRequest.getTotalAmount() / expenseRequest.getInvolvedParticipantNames().size();
+	    double share = expenseRequest.getTotalAmount() / expenseRequest.getInvolvedParticipants().size();
 	    
-	    for (String name : expenseRequest.getInvolvedParticipantNames()) {
+	    for (ParticipantDTO dto : expenseRequest.getInvolvedParticipants()) {
 	        Participant p = trip.getParticipants().stream()
-	            .filter(part -> part.getName().equalsIgnoreCase(name))
+	            .filter(part -> part.getParticipantUID().equalsIgnoreCase(dto.getParticipantUID()))
 	            .findFirst()
-	            .orElseThrow(() -> new RuntimeException("Participant " + name + " not found!"));
+	            .orElseThrow(() -> new RuntimeException("Participant with UID: " + dto.getParticipantUID() + " not found!"));
 
 	        ExpenseSplit split = new ExpenseSplit();
 	        split.setExpense(expense);
