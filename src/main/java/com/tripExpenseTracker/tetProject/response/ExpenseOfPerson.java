@@ -10,6 +10,8 @@ import lombok.Data;
 public class ExpenseOfPerson {
 	private ParticipantDTO participant;
 	private Double shareAmount;
+	private Double amountPaidInTrip;
+	private Double totalAmountToBePaid;
 	
 	@AllArgsConstructor
 	@Data

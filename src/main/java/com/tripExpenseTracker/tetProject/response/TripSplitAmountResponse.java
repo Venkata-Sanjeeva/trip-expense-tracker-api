@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class TripSplitAmountResponse {
 	private String tripUID;
+	private String tripName;
 	private Double totalTripAmount;
 	
 	private List<ExpenseOfPerson> tripParticipants;

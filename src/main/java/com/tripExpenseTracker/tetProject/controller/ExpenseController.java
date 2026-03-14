@@ -56,8 +56,12 @@ public class ExpenseController {
 				.build());
 	}
 	@GetMapping("/calculate/totalShareAmount/{tripUID}")
-	public ResponseEntity<TripSplitAmountResponse> result(@PathVariable String tripUID) {
-		return ResponseEntity.ok(expenseService.totalExpensesOfEachParticipant(tripUID));
+	public ResponseEntity<GlobalResponse<TripSplitAmountResponse>> result(@PathVariable String tripUID) {
+		return ResponseEntity.status(HttpStatus.OK).body(GlobalResponse.<TripSplitAmountResponse>builder()
+				.status(HttpStatus.OK.value())
+				.data(expenseService.totalExpensesOfEachParticipant(tripUID))
+				.message("Total share amount for the trip with UID: " + tripUID + " has calculated successfully...")
+				.build());
 	}
 
 	@GetMapping("calculate/shareAmount/{tripUID}")
