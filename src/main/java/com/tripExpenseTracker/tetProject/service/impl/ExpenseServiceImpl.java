@@ -96,16 +96,30 @@ public class ExpenseServiceImpl implements ExpenseService {
 		return totalTripAmt;
 	}
 
-	private List<ExpenseOfPerson.ExpenseSplitPerPerson> getExpenseListOfPerson(List<ExpenseResponse> expenseList) {
+	private boolean isPartiIncludedInExpenseOrNot(List<ExpenseResponse.SplitDetail> expenseSplits, String partiUID) {
+		for(ExpenseResponse.SplitDetail split : expenseSplits) {
+			if(split.getParticipant().getParticipantUID().equals(partiUID)) return true;
+		}
+		return false;
+	}
+
+	private List<ExpenseOfPerson.ExpenseSplitPerPerson> getExpenseListOfPerson(List<ExpenseResponse> expenseList, String partUID) {
 		List<ExpenseOfPerson.ExpenseSplitPerPerson> listExpensesToBePaid = new ArrayList<>();
 
 		for(ExpenseResponse expenseResponseObj : expenseList) {
+			List<ExpenseResponse.SplitDetail> splits = expenseResponseObj.getSplits();
+
 			ExpenseOfPerson.ExpenseSplitPerPerson expenseSplitPerPerson = new ExpenseOfPerson.ExpenseSplitPerPerson(
 					expenseResponseObj.getExpenseUID(),
 					expenseResponseObj.getDescription(),
-					expenseResponseObj.getSplits().get(0).getShareAmount(),
+					0.0,
 					expenseResponseObj.getTotalAmount()
 			);
+
+			if(isPartiIncludedInExpenseOrNot(splits, partUID)) {
+				expenseSplitPerPerson.setAmountToBePaid(splits.get(0).getShareAmount());
+			}
+
 			listExpensesToBePaid.add(expenseSplitPerPerson);
 		}
 
@@ -130,7 +144,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 					participantShareAmt,
 					participantPaidAmt,
 					(participantPaidAmt >= participantShareAmt ? 0.0 : totalAmtToBePaid),
-					getExpenseListOfPerson(expenseList)
+					getExpenseListOfPerson(expenseList, partiUID)
 			);
 
 			expenseOfPeople.add(expenseOfPerson);
@@ -209,7 +223,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
 	    // 4. Update Splits: Clear the old and add the new
 	    // orphanRemoval = true in the Entity will handle the DB deletion
-	    expense.getSplits().clear(); 
+	    expense.getSplits().clear();
 
 	    double share = expenseRequest.getTotalAmount() / expenseRequest.getInvolvedParticipants().size();
 	    
