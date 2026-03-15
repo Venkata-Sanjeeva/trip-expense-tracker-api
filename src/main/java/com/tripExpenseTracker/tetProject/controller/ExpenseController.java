@@ -3,6 +3,7 @@ package com.tripExpenseTracker.tetProject.controller;
 import java.security.Principal;
 import java.util.List;
 
+import com.tripExpenseTracker.tetProject.response.ExpenseOfPerson;
 import com.tripExpenseTracker.tetProject.response.TripSplitAmountResponse;
 import org.springdoc.core.service.GenericResponseService;
 import org.springframework.http.HttpStatus;
@@ -64,8 +65,19 @@ public class ExpenseController {
 				.build());
 	}
 
-	@GetMapping("calculate/shareAmount/{tripUID}")
+	@GetMapping("/calculate/shareAmount/{tripUID}")
 	public ResponseEntity<Double> calcShareIndividually(@PathVariable String tripUID, @RequestParam String participantUID) {
 		return ResponseEntity.ok(expenseService.calcShareAmountPerPerson(participantUID,tripUID));
+	}
+
+	@GetMapping("/{tripUID}/balances")
+	public ResponseEntity<GlobalResponse<List<ExpenseOfPerson>>> getParticipantShareAmountsByTripUID(@PathVariable String tripUID) {
+		return ResponseEntity.status(HttpStatus.OK).body(
+				GlobalResponse.<List<ExpenseOfPerson>>builder()
+						.status(HttpStatus.OK.value())
+						.message("Balances of Participants in trip calculated successfully...")
+						.data(expenseService.fetchShareAmtOfParticipants(tripUID))
+						.build()
+		);
 	}
 }

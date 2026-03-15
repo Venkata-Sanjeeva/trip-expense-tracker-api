@@ -112,6 +112,32 @@ public class ExpenseServiceImpl implements ExpenseService {
 		return listExpensesToBePaid;
 	}
 
+	private List<ExpenseOfPerson> calShareAmtOfMembersInTrip(String tripUID, List<ExpenseResponse> expenseList) {
+		Map<String,Double> shareAmtOfPeople = calcTotalShareAmountOfPersons(expenseList);
+		Map<String, Double> paidAmtOfPeople = calcTotalAmountOfPersonsWhoPaid(expenseList);
+
+		List<ExpenseOfPerson> expenseOfPeople = new ArrayList<>();
+
+		for(String partiUID : shareAmtOfPeople.keySet()) {
+			Participant participantObj = participantsService.getParticipantByUIDAndTripUID(partiUID, tripUID).orElseThrow(() -> new RuntimeException("Participant with UID: " + partiUID + " not found!"));
+
+			Double participantShareAmt = shareAmtOfPeople.getOrDefault(partiUID, 0.0);
+			Double participantPaidAmt = paidAmtOfPeople.getOrDefault(partiUID, 0.0);
+			Double totalAmtToBePaid = Math.abs(participantPaidAmt - participantShareAmt);
+
+			ExpenseOfPerson expenseOfPerson = new ExpenseOfPerson(
+					new ParticipantDTO(partiUID, participantObj.getName()),
+					participantShareAmt,
+					participantPaidAmt,
+					(participantPaidAmt >= participantShareAmt ? 0.0 : totalAmtToBePaid),
+					getExpenseListOfPerson(expenseList)
+			);
+
+			expenseOfPeople.add(expenseOfPerson);
+		}
+		return expenseOfPeople;
+	}
+
 	@Override
 	@Transactional
 	public ExpenseResponse createExpense(ExpenseRequest expenseRequest) {
@@ -219,8 +245,6 @@ public class ExpenseServiceImpl implements ExpenseService {
 	public TripSplitAmountResponse totalExpensesOfEachParticipant(String tripUID) {
 		Trip tripObj = tripService.fetchTripByUID(tripUID);
 		List<ExpenseResponse> expenseList = fetchExpensesOfTripUID(tripUID);
-		Map<String,Double> mapForShareAmt = calcTotalShareAmountOfPersons(expenseList);
-		Map<String, Double> mapForPaidAmountOfPartic = calcTotalAmountOfPersonsWhoPaid(expenseList);
 
 		TripSplitAmountResponse tripSplitAmountResponse = new TripSplitAmountResponse();
 
@@ -228,25 +252,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 		tripSplitAmountResponse.setTripName(tripObj.getName());
 		tripSplitAmountResponse.setTotalTripAmount(calcTotalAmtOfTrip(expenseList));
 
-		List<ExpenseOfPerson> expenseOfPeople = new ArrayList<>();
-
-		for(String partiUID : mapForShareAmt.keySet()) {
-			Participant participantObj = participantsService.getParticipantByUIDAndTripUID(partiUID, tripUID).orElseThrow(() -> new RuntimeException("Participant with UID: " + partiUID + " not found!"));
-
-			Double participantShareAmt = mapForShareAmt.getOrDefault(partiUID, 0.0);
-			Double participantPaidAmt = mapForPaidAmountOfPartic.getOrDefault(partiUID, 0.0);
-			Double totalAmtToBePaid = Math.abs(participantPaidAmt - participantShareAmt);
-
-			ExpenseOfPerson expenseOfPerson = new ExpenseOfPerson(
-					new ParticipantDTO(partiUID, participantObj.getName()),
-					participantShareAmt,
-					participantPaidAmt,
-					(participantPaidAmt >= participantShareAmt ? 0.0 : totalAmtToBePaid),
-					getExpenseListOfPerson(expenseList)
-			);
-
-			expenseOfPeople.add(expenseOfPerson);
-		}
+		List<ExpenseOfPerson> expenseOfPeople = calShareAmtOfMembersInTrip(tripUID, expenseList);
 
 		tripSplitAmountResponse.setTripParticipants(expenseOfPeople);
 
@@ -259,6 +265,12 @@ public class ExpenseServiceImpl implements ExpenseService {
 		Map<String,Double> map = calcTotalShareAmountOfPersons(fetchExpensesOfTripUID(tripUID));
 
 		return map.getOrDefault(participant.getName(),0.0);
+	}
+
+	public List<ExpenseOfPerson> fetchShareAmtOfParticipants(String tripUID) {
+		List<ExpenseResponse> expenseList = fetchExpensesOfTripUID(tripUID);
+
+		return calShareAmtOfMembersInTrip(tripUID, expenseList);
 	}
 
 }
