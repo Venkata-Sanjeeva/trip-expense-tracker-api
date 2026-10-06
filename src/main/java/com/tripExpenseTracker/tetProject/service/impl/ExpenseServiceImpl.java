@@ -104,21 +104,31 @@ public class ExpenseServiceImpl implements ExpenseService {
 	}
 
 	private List<ExpenseOfPerson.ExpenseSplitPerPerson> getExpenseListOfPerson(List<ExpenseResponse> expenseList, String partUID) {
+
 		List<ExpenseOfPerson.ExpenseSplitPerPerson> listExpensesToBePaid = new ArrayList<>();
 
-		for(ExpenseResponse expenseResponseObj : expenseList) {
+		for (ExpenseResponse expenseResponseObj : expenseList) {
+
 			List<ExpenseResponse.SplitDetail> splits = expenseResponseObj.getSplits();
 
-			ExpenseOfPerson.ExpenseSplitPerPerson expenseSplitPerPerson = new ExpenseOfPerson.ExpenseSplitPerPerson(
-					expenseResponseObj.getExpenseUID(),
-					expenseResponseObj.getDescription(),
-					0.0,
-					expenseResponseObj.getTotalAmount()
-			);
+			ExpenseResponse.SplitDetail participantSplit = splits.stream()
+					.filter(split ->
+							split.getParticipant()
+									.getParticipantUID()
+									.equalsIgnoreCase(partUID))
+					.findFirst()
+					.orElse(null);
 
-			if(isPartiIncludedInExpenseOrNot(splits, partUID)) {
-				expenseSplitPerPerson.setAmountToBePaid(splits.get(0).getShareAmount());
-			}
+			// Participant is NOT part of this expense
+			if (participantSplit == null) continue;
+
+			ExpenseOfPerson.ExpenseSplitPerPerson expenseSplitPerPerson =
+					new ExpenseOfPerson.ExpenseSplitPerPerson(
+							expenseResponseObj.getExpenseUID(),
+							expenseResponseObj.getDescription(),
+							participantSplit.getShareAmount(),
+							expenseResponseObj.getTotalAmount()
+					);
 
 			listExpensesToBePaid.add(expenseSplitPerPerson);
 		}
@@ -143,7 +153,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 					new ParticipantDTO(partiUID, participantObj.getName()),
 					participantShareAmt,
 					participantPaidAmt,
-					(participantPaidAmt >= participantShareAmt ? 0.0 : totalAmtToBePaid),
+					totalAmtToBePaid,
 					getExpenseListOfPerson(expenseList, partiUID)
 			);
 
