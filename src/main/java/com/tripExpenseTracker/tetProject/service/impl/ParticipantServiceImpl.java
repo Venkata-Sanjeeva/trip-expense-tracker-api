@@ -33,6 +33,8 @@ public class ParticipantServiceImpl implements ParticipantService {
 		return participantRepo.findByTripId(tripObj.getId());
 	}
 	
-	
+	public Participant fetchOriginalParticipantbyUID(String participantUID) {
+		return participantRepo.findByParticipantUID(participantUID).orElseThrow(() -> new RuntimeException("Participant not found!!!"));
+	}
 
 }

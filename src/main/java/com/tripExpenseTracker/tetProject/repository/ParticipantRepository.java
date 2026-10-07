@@ -11,4 +11,6 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long>{
 	Optional<Participant> findByParticipantUIDAndTripId(String participantUID, Long tripId);
 	
 	List<Participant> findByTripId(Long tripId);
+
+	Optional<Participant> findByParticipantUID(String participantUID);
 }

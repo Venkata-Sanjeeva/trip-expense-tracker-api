@@ -7,9 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.tripExpenseTracker.tetProject.response.ExpenseOfPerson;
-import com.tripExpenseTracker.tetProject.response.ParticipantDTO;
-import com.tripExpenseTracker.tetProject.response.TripSplitAmountResponse;
+import com.tripExpenseTracker.tetProject.response.*;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +17,6 @@ import com.tripExpenseTracker.tetProject.entity.Participant;
 import com.tripExpenseTracker.tetProject.entity.Trip;
 import com.tripExpenseTracker.tetProject.repository.ExpenseRepository;
 import com.tripExpenseTracker.tetProject.request.ExpenseRequest;
-import com.tripExpenseTracker.tetProject.response.ExpenseResponse;
 import com.tripExpenseTracker.tetProject.service.interfaces.ExpenseService;
 import com.tripExpenseTracker.tetProject.util.IdentifierGenerator;
 
@@ -297,4 +294,60 @@ public class ExpenseServiceImpl implements ExpenseService {
 		return calShareAmtOfMembersInTrip(tripUID, expenseList);
 	}
 
+	private BorrowedAmtResponse convertBorrowedAmt(Map<String, Double> amtBorrowedFromOther) {
+		BorrowedAmtResponse response = new BorrowedAmtResponse();
+
+		List<BorrowedAmtResponse.AmountBorrowedParticipantObj> listOfBorrowedParticipants = new ArrayList<>();
+		Double totalAmtBorrowed = 0.0;
+
+		for (String participantUID : amtBorrowedFromOther.keySet()) {
+			Participant participantObj = participantsService.fetchOriginalParticipantbyUID(participantUID);
+			Double borrowedAmt = amtBorrowedFromOther.get(participantUID);
+
+			BorrowedAmtResponse.AmountBorrowedParticipantObj borrowedParticipantObj = new BorrowedAmtResponse.AmountBorrowedParticipantObj(participantUID, participantObj.getName(), borrowedAmt);
+
+			listOfBorrowedParticipants.add(borrowedParticipantObj);
+			totalAmtBorrowed += borrowedAmt;
+		}
+
+		response.setTotalBorrowedAmt(totalAmtBorrowed);
+		response.setListOfParticipantsAmountBorrowedFrom(listOfBorrowedParticipants);
+
+		return response;
+	}
+	public BorrowedAmtResponse calHowMuchBorrowedFromOthers(String participantUID, String tripUID) {
+
+		Participant participantObj = participantsService.getParticipantByUIDAndTripUID(participantUID, tripUID).orElseThrow(() -> new RuntimeException("Participant with UID: " + participantUID + " not found!!!"));
+
+		Trip tripObj =  tripService.fetchTripByUID(tripUID);
+
+		List<Expense> expensesList = tripObj.getExpenses();
+
+		Map<String, Double> borrowedAmtFromOthers = new HashMap<>();
+
+		for(Expense expenseObj : expensesList) {
+			List<ExpenseSplit> expenseSplitList = expenseObj.getSplits();
+			Participant paidBy = expenseObj.getPaidBy();
+
+			ExpenseSplit participantInclInSplit = expenseSplitList.stream().filter((splitObj) -> {
+				Participant inclParticipant = splitObj.getParticipant();
+				if(inclParticipant != null) {
+					return inclParticipant.equals(participantObj);
+				}
+
+				return false;
+			}).findFirst().orElse(null);
+
+			if(participantInclInSplit != null && !paidBy.equals(participantObj)) {
+
+				Double prevBorrowedAmt = borrowedAmtFromOthers.getOrDefault(paidBy.getParticipantUID(), 0.0);
+
+				borrowedAmtFromOthers.put(paidBy.getParticipantUID(), prevBorrowedAmt + participantInclInSplit.getShareAmount());
+			}
+
+        }
+
+		return convertBorrowedAmt(borrowedAmtFromOthers);
+
+	}
 }

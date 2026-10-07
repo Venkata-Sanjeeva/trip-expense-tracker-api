@@ -2,17 +2,15 @@ package com.tripExpenseTracker.tetProject.controller;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
-import com.tripExpenseTracker.tetProject.response.ExpenseOfPerson;
-import com.tripExpenseTracker.tetProject.response.TripSplitAmountResponse;
+import com.tripExpenseTracker.tetProject.response.*;
 import org.springdoc.core.service.GenericResponseService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.tripExpenseTracker.tetProject.request.ExpenseRequest;
-import com.tripExpenseTracker.tetProject.response.ExpenseResponse;
-import com.tripExpenseTracker.tetProject.response.GlobalResponse;
 import com.tripExpenseTracker.tetProject.service.impl.ExpenseServiceImpl;
 
 import lombok.RequiredArgsConstructor;
@@ -79,5 +77,10 @@ public class ExpenseController {
 						.data(expenseService.fetchShareAmtOfParticipants(tripUID))
 						.build()
 		);
+	}
+
+	@GetMapping("/getBorrowedAmountFromOthers/{tripUID}/{participantUID}")
+	public ResponseEntity<BorrowedAmtResponse> fetchBorrowedAmount(@PathVariable String participantUID, @PathVariable String tripUID) {
+		return ResponseEntity.ok().body(expenseService.calHowMuchBorrowedFromOthers(participantUID, tripUID));
 	}
 }
