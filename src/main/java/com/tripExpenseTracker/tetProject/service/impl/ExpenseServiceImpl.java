@@ -357,7 +357,12 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         }
 
-		return convertBorrowedAmt(borrowedAmtFromOthers);
+		BorrowedAmtResponse response = convertBorrowedAmt(borrowedAmtFromOthers);
+
+		response.setParticipantUID(participantObj.getParticipantUID());
+		response.setParticipantName(participantObj.getName());
+
+		return response;
 
 	}
 

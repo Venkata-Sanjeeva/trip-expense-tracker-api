@@ -10,6 +10,8 @@ import java.util.List;
 @NoArgsConstructor
 public class BorrowedAmtResponse {
 
+    String participantName;
+    String participantUID;
     Double totalBorrowedAmt;
 
     @Getter
