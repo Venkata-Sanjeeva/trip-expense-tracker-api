@@ -79,8 +79,14 @@ public class ExpenseController {
 		);
 	}
 
-	@GetMapping("/getBorrowedAmountFromOthers/{tripUID}/{participantUID}")
-	public ResponseEntity<BorrowedAmtResponse> fetchBorrowedAmount(@PathVariable String participantUID, @PathVariable String tripUID) {
-		return ResponseEntity.ok().body(expenseService.calHowMuchBorrowedFromOthers(participantUID, tripUID));
+	@GetMapping("/getBorrowedAmountFromOthers/{tripUID}")
+	public ResponseEntity<GlobalResponse<List<BorrowedAmtResponse>>> fetchBorrowedAmountInWholeTripForEachParticipant(@PathVariable String tripUID) {
+		return ResponseEntity.status(HttpStatus.OK).body(
+				GlobalResponse.<List<BorrowedAmtResponse>>builder()
+						.status(HttpStatus.OK.value())
+						.message("Successfully Calculated the Borrowed Amount of each participant in the trip.")
+						.data(expenseService.calTripParticipantsHowMuchEachBorrowedFromOthers(tripUID))
+						.build()
+		);
 	}
 }

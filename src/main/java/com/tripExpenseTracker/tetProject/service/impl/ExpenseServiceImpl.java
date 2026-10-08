@@ -315,20 +315,27 @@ public class ExpenseServiceImpl implements ExpenseService {
 
 		return response;
 	}
-	public BorrowedAmtResponse calHowMuchBorrowedFromOthers(String participantUID, String tripUID) {
 
-		Participant participantObj = participantsService.getParticipantByUIDAndTripUID(participantUID, tripUID).orElseThrow(() -> new RuntimeException("Participant with UID: " + participantUID + " not found!!!"));
+	public List<BorrowedAmtResponse> calTripParticipantsHowMuchEachBorrowedFromOthers(String tripUID) {
+		Trip tripObj = tripService.fetchTripByUID(tripUID);
 
-		Trip tripObj =  tripService.fetchTripByUID(tripUID);
+		List<Participant> tripParticipantsList = tripObj.getParticipants();
+
+        return tripParticipantsList.stream().map((participantObj) -> calHowMuchBorrowedFromOthers(participantObj, tripObj)).toList();
+	}
+
+	private BorrowedAmtResponse calHowMuchBorrowedFromOthers(Participant participantObj, Trip tripObj) {
 
 		List<Expense> expensesList = tripObj.getExpenses();
 
 		Map<String, Double> borrowedAmtFromOthers = new HashMap<>();
 
+		// Get expenses List
 		for(Expense expenseObj : expensesList) {
 			List<ExpenseSplit> expenseSplitList = expenseObj.getSplits();
 			Participant paidBy = expenseObj.getPaidBy();
 
+			// Check whether the given participant is incl in the split or not.
 			ExpenseSplit participantInclInSplit = expenseSplitList.stream().filter((splitObj) -> {
 				Participant inclParticipant = splitObj.getParticipant();
 				if(inclParticipant != null) {
@@ -338,10 +345,13 @@ public class ExpenseServiceImpl implements ExpenseService {
 				return false;
 			}).findFirst().orElse(null);
 
+			// if participant is incl in the split and that participant did not pay for the expense then that participant is borrowed money from the paid participant
 			if(participantInclInSplit != null && !paidBy.equals(participantObj)) {
 
+				// Need to keep track of prev borrowed amount from the same participant from other expenses.
 				Double prevBorrowedAmt = borrowedAmtFromOthers.getOrDefault(paidBy.getParticipantUID(), 0.0);
 
+				// Add the current borrowed amount to the recently borrowed amount from the same participant.
 				borrowedAmtFromOthers.put(paidBy.getParticipantUID(), prevBorrowedAmt + participantInclInSplit.getShareAmount());
 			}
 
@@ -350,4 +360,5 @@ public class ExpenseServiceImpl implements ExpenseService {
 		return convertBorrowedAmt(borrowedAmtFromOthers);
 
 	}
+
 }
